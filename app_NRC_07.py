@@ -9,28 +9,35 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.title("\U0001F4CA Dashboard Registro Civil - Provimento 07")
+st.title("📊 Dashboard Registro Civil - Provimento 07")
+
+# ===================== LINKS DAS ABAS (CSV) =====================
+sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
+base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
+
+sheet_urls = {
+    "Respostas ao formulário 2": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202",
+    "QUANTITATIVO (2024 E 2025)": f"{base_url}QUANTITATIVO%20(2024%20E%202025)"
+}
 
 # ===================== FUNÇÃO: Carregar Dados =====================
 @st.cache_data(ttl=3600)
-def carregar_planilha():
-    sheet_url = "https://docs.google.com/spreadsheets/d/1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI/export?format=xlsx"
-    df_dict = pd.read_excel(sheet_url, sheet_name=None)
-    origem = "Planilha Online"
-    return df_dict, origem
+def carregar_planilha(aba):
+    df = pd.read_csv(sheet_urls[aba])
+    origem = "Planilha Pública Online (CSV)"
+    return df, origem
 
 # ===================== LOAD DATA =====================
-st.sidebar.header("\U0001F4C2 Seleção de Aba")
-dados, origem = carregar_planilha()
-abas_selecionadas = ["Respostas ao formulário 2", "QUANTITATIVO (2024 E 2025)"]
+st.sidebar.header("📂 Seleção de Aba")
+abas_selecionadas = list(sheet_urls.keys())
 aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 
+df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
-df = dados[aba_selecionada]
 
 # ===================== ABA 1: Respostas ao formulário 2 =====================
 if aba_selecionada == "Respostas ao formulário 2":
-    st.header("\U0001F4DD Respostas ao Formulário 2")
+    st.header("📝 Respostas ao Formulário 2")
 
     col1, col2 = st.sidebar.columns(2)
     municipios = col1.multiselect(
@@ -73,7 +80,7 @@ if aba_selecionada == "Respostas ao formulário 2":
     # Download CSV
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button(
-        label="\U0001F4E5 Baixar CSV",
+        label="📥 Baixar CSV",
         data=csv.encode('utf-8-sig'),
         file_name="respostas_formulario2_filtrado.csv",
         mime='text/csv'
@@ -81,7 +88,7 @@ if aba_selecionada == "Respostas ao formulário 2":
 
 # ===================== ABA 2: QUANTITATIVO (2024 E 2025) =====================
 elif aba_selecionada == "QUANTITATIVO (2024 E 2025)":
-    st.header("\U0001F4C8 Quantitativo (2024 e 2025)")
+    st.header("📊 Quantitativo (2024 e 2025)")
 
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
 
@@ -109,11 +116,11 @@ elif aba_selecionada == "QUANTITATIVO (2024 E 2025)":
     # Download CSV
     csv = df.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button(
-        label="\U0001F4E5 Baixar CSV",
+        label="📥 Baixar CSV",
         data=csv.encode('utf-8-sig'),
         file_name="quantitativo_2024_2025.csv",
         mime='text/csv'
     )
 
 # ===================== FINAL =====================
-st.success("\u2705 Dashboard carregado com sucesso!")
+st.success("✅ Dashboard carregado com sucesso!")
