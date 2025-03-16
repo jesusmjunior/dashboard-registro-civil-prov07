@@ -65,11 +65,10 @@ if aba_selecionada == "Respostas ao formulário 2":
         ).properties(title="Distribuição por Município")
         st.altair_chart(pie_chart, use_container_width=True)
 
-        # Gráfico Barras Nascimentos e Registros
+        # Gráfico Barras Nascimentos e Registros (corrigido com melt)
         bar_data = df_filtrado.groupby("MUNICÍPIO")[['NASCIMENTOS (QTDE)', 'REGISTROS (QTDE)']].sum().reset_index()
-        bar_chart = alt.Chart(bar_data).transform_fold(
-            ["NASCIMENTOS (QTDE)", "REGISTROS (QTDE)"], as_=["Tipo", "Total"]
-        ).mark_bar().encode(
+        bar_data_melt = bar_data.melt(id_vars='MUNICÍPIO', var_name='Tipo', value_name='Total')
+        bar_chart = alt.Chart(bar_data_melt).mark_bar().encode(
             x=alt.X("MUNICÍPIO:N", sort='-y'),
             y="Total:Q",
             color="Tipo:N",
