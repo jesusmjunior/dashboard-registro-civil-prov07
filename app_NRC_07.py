@@ -15,13 +15,8 @@ st.title("\U0001F4CA Dashboard Registro Civil - Provimento 07")
 @st.cache_data(ttl=3600)
 def carregar_planilha():
     sheet_url = "https://docs.google.com/spreadsheets/d/1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI/export?format=xlsx"
-    local_path = "data/Relatorio_Registro_Civil_Offline.xlsx"
-    try:
-        df_dict = pd.read_excel(sheet_url, sheet_name=None)
-        origem = "Planilha Online"
-    except Exception:
-        df_dict = pd.read_excel(local_path, sheet_name=None)
-        origem = "Planilha Offline"
+    df_dict = pd.read_excel(sheet_url, sheet_name=None)
+    origem = "Planilha Online"
     return df_dict, origem
 
 # ===================== LOAD DATA =====================
