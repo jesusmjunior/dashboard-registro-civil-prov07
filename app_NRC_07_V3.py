@@ -288,7 +288,7 @@ elif aba_selecionada == "SUB-REGISTRO":
     # Download CSV
     csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
-# ================== ROBOZINHO VERTICAL ==================
+# ================== ROBOZINHO VERTICAL COM LINK ==================
 st.markdown("""
     <style>
         .robo-lateral {
@@ -307,6 +307,10 @@ st.markdown("""
         }
         .robo-lateral img {
             width: 60px;
+            transition: transform 0.3s ease;
+        }
+        .robo-lateral img:hover {
+            transform: scale(1.2);
         }
         .faixa-texto {
             background-color: #800000;
@@ -319,7 +323,9 @@ st.markdown("""
         }
     </style>
     <div class='robo-lateral'>
-        <img src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png'/>
+        <a href='https://www.tjma.jus.br/site/extrajudicial' target='_blank'>
+            <img src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png'/>
+        </a>
         <div class='faixa-texto'>I.A. COGEX 2025</div>
     </div>
 """, unsafe_allow_html=True)
