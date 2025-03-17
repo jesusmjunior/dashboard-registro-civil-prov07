@@ -337,6 +337,4 @@ st.markdown("""
     São Luís - Maranhão CEP 65.075-700</p>
 """, unsafe_allow_html=True)
 
-st.caption(f"Atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
-
 st.success("\u2705 Painel COGEX 2025 carregado com sucesso!")
