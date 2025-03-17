@@ -290,4 +290,16 @@ elif aba_selecionada == "SUB-REGISTRO":
     st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
 
 # ===================== FINAL =====================
+st.markdown("""
+    <div class='faixa'>
+        <img src='https://cdn-icons-png.flaticon.com/512/4712/4712109.png' width='40' style='vertical-align: middle;'/>  
+        COGEX 2025 - Gestão Inteligente em Movimento!
+    </div>
+    <hr>
+    <p style='text-align: center;'>Corregedoria Geral do Foro Extrajudicial<br>
+    Rua Cumã, nº 300, 1º andar, Edifício Manhattan Center III, Jardim Renascença 2<br>
+    São Luís - Maranhão CEP 65.075-700</p>
+""", unsafe_allow_html=True)
+
+st.caption(f"Atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
 st.success("✅ Dashboard carregado com sucesso!Todo os Direitos Reservados! COGEX - NRC 2025")
