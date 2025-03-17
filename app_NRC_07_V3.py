@@ -172,5 +172,46 @@ elif aba_selecionada == "DADOS ORGANIZADOS":
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="dados_organizados.csv", mime='text/csv')
+    # ===================== ABA: GRAPH SITE =====================
+elif aba_selecionada == "GRAPH SITE":
+    st.header("📈 Nascimentos x Registros - Graph Site")
+
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+    if not df.empty and {'Ano/Mês', 'NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'}.issubset(df.columns):
+        st.dataframe(df, use_container_width=True)
+
+        # Prepara dados para Altair
+        df_melt = df.melt(id_vars='Ano/Mês', value_vars=['NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'],
+                          var_name='Tipo', value_name='Total')
+
+        # Gráfico de linha + pontos + preenchimento
+        area_chart = alt.Chart(df_melt).mark_area(opacity=0.3).encode(
+            x=alt.X('Ano/Mês:N', sort=None, title='Ano/Mês'),
+            y=alt.Y('Total:Q', title='Quantidade'),
+            color=alt.Color('Tipo:N', scale=alt.Scale(scheme='category10')),
+            tooltip=['Ano/Mês', 'Tipo', 'Total']
+        )
+
+        line_chart = alt.Chart(df_melt).mark_line().encode(
+            x='Ano/Mês:N',
+            y='Total:Q',
+            color='Tipo:N'
+        )
+
+        point_chart = alt.Chart(df_melt).mark_point(filled=True).encode(
+            x='Ano/Mês:N',
+            y='Total:Q',
+            color='Tipo:N'
+        )
+
+        final_chart = (area_chart + line_chart + point_chart).properties(title="📊 Nascimentos x Registros por Ano/Mês")
+
+        st.altair_chart(final_chart, use_container_width=True)
+
+        csv = df.to_csv(index=False, encoding='utf-8-sig')
+        st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="graph_site.csv", mime='text/csv')
+    else:
+        st.warning("Colunas necessárias não encontradas para gerar gráfico.")
 # ===================== FINAL =====================
 st.success("✅ Dashboard carregado com sucesso!")
