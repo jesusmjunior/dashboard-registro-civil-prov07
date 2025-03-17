@@ -251,7 +251,7 @@ elif aba_selecionada == "DADOS ORGANIZADOS":
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="dados_organizados.csv", mime='text/csv')
 # ===================== ABA: SUB-REGISTRO =====================
 elif aba_selecionada == "SUB-REGISTRO":
-    st.header("⚠️ Índices de Sub-registro IBGE por Município")
+    st.header("⚠️ Índices de Sub-registro IBGE por Município - DATA SET ORGANIZADO 17/04/2024")
 
     # Limpar colunas
     df.columns = df.columns.str.strip()
