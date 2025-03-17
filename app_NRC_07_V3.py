@@ -50,8 +50,8 @@ def gerar_grafico_barras(df_filtrado, grupo, colunas_sum, titulo):
         tooltip=[grupo, 'Tipo', 'Total']
     ).properties(title=titulo)
     st.altair_chart(bar_chart, use_container_width=True)
-# ===================== ABA: Respostas ao formulário 2 =====================
-if aba_selecionada == "Respostas ao formulário 2":
+# ===================== ABA: RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA =====================
+if aba_selecionada == "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA":
     st.header("📝 Respostas ao Formulário 2")
 
     col1, col2 = st.sidebar.columns(2)
