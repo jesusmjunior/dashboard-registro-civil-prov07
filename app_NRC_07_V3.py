@@ -17,7 +17,8 @@ with col1:
     st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
 
 with col2:
-    st.image("https://drive.google.com/uc?id=17Fj08fiVDAjPRwYXsA7RuDNWDatnejgV", width=120)
+    st.image("dashboard-registro-civil-prov07
+/CGX.png V", width=120)
 
 # ===================== LINKS DAS ABAS (CSV) =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
