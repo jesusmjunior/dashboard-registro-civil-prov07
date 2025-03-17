@@ -50,7 +50,6 @@ def gerar_grafico_barras(df_filtrado, grupo, colunas_sum, titulo):
         tooltip=[grupo, 'Tipo', 'Total']
     ).properties(title=titulo)
     st.altair_chart(bar_chart, use_container_width=True)
-
 # ===================== ABA: Respostas ao formulário 2 =====================
 if aba_selecionada == "Respostas ao formulário 2":
     st.header("📝 Respostas ao Formulário 2")
@@ -137,23 +136,10 @@ elif aba_selecionada == "STATUS DE RECEBIMENTO":
     st.dataframe(df_filtrado, use_container_width=True)
 
     if not df_filtrado.empty:
-        bar_data = df_filtrado.groupby("MUNICÍPIO")[['NASCIMENTOS (QTDE)', 'REGISTROS (QTDE)']].sum().reset_index()
-        bar_data_melt = bar_data.melt(id_vars='MUNICÍPIO', var_name='Tipo', value_name='Total')
-        bar_chart = alt.Chart(bar_data_melt).mark_bar().encode(
-            x=alt.X("MUNICÍPIO:N", sort='-y'),
-            y="Total:Q",
-            color="Tipo:N",
-            tooltip=['MUNICÍPIO', 'Tipo', 'Total']
-        ).properties(title="Nascimentos x Registros por Município")
-        st.altair_chart(bar_chart, use_container_width=True)
+        gerar_grafico_barras(df_filtrado, "MUNICÍPIO", ['NASCIMENTOS (QTDE)', 'REGISTROS (QTDE)'], "Nascimentos x Registros por Município")
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
-    st.sidebar.download_button(
-        label="📥 Baixar CSV",
-        data=csv.encode('utf-8-sig'),
-        file_name="status_recebimento.csv",
-        mime='text/csv'
-    )
+    st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="status_recebimento.csv", mime='text/csv')
 
 # ===================== ABA: ENDEREÇO DAS UIS =====================
 elif aba_selecionada == "ENDEREÇO DAS UIS":
@@ -171,12 +157,7 @@ elif aba_selecionada == "ENDEREÇO DAS UIS":
         st.map(df_filtrado.rename(columns={"LATITUDE": "lat", "LONGITUDE": "lon"}))
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
-    st.sidebar.download_button(
-        label="📥 Baixar CSV",
-        data=csv.encode('utf-8-sig'),
-        file_name="endereco_uis.csv",
-        mime='text/csv'
-    )
+    st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="endereco_uis.csv", mime='text/csv')
 
 # ===================== FINAL =====================
 st.success("✅ Dashboard carregado com sucesso!")
