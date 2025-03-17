@@ -17,8 +17,22 @@ with col1:
     st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
 
 with col2:
-    st.image("https://drive.google.com/uc?id=17Fj08fiVDAjPRwYXsA7RuDNWDatnejgV", width=120)
+    st.image("https://raw.githubusercontent.com/jesusmjunior/dashboard-registro-civil-prov07/main/CGX.png", width=120)
 
+# ===================== AVISO UNIDADE INTERLIGADA =====================
+st.warning("🚨 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
+st.markdown("[📝 **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
+
+# ===================== RESUMO DO PROVIMENTO =====================
+with st.expander("ℹ️ Sobre o Provimento 07/2021 - Clique para detalhes"):
+    st.markdown("""
+**Resumo do Provimento CGJ:**
+
+A instalação de unidades interligadas em hospitais é obrigatória, independentemente do número de partos. Os registros de nascimento e óbito são feitos nessas unidades com livro próprio. Os serviços devem enviar relatório mensal até o dia 10 via [Formulário Online](https://forms.gle/vETZAjAStN3F9YHx9), sob pena de sanções administrativas.
+
+**Desembargador José Jorge Figueiredo dos Anjos**  
+Corregedor-Geral da Justiça (Biênio 2024-2026)
+""")
 # ===================== LINKS DAS ABAS (CSV) =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
