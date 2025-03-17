@@ -8,6 +8,7 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
 # ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
 col1, col2 = st.columns([6, 1])  # Espaço maior à esquerda
 
@@ -17,18 +18,24 @@ with col1:
 
 with col2:
     st.image("https://drive.google.com/uc?id=17Fj08fiVDAjPRwYXsA7RuDNWDatnejgV", width=120)
+
 # ===================== LINKS DAS ABAS (CSV) =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
+
+# ID da planilha SUB-REGISTRO separada
+subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
+subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
 
 sheet_urls = {
     "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202",
     "QUANTITATIVO (2024 E 2025)": f"{base_url}QUANTITATIVO%20(2024%20E%202025)",
     "DADOS FILTRADOS DA CAIXA DE ENTRADA": f"{base_url}(N%C3%83O%20ALTERE%20OS%20FILTROS%20OU%20DADOS)",
-   "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO": f"{base_url}P%C3%A1gina11",
+    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO": f"{base_url}P%C3%A1gina11",
     "STATUS DE RECEBIMENTO": f"{base_url}STATUS%20DE%20RECEBIMENTO",
     "GRAPH SITE": f"{base_url}GRAPH%20SITE",
-    "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS"
+    "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
+    "SUB-REGISTRO": subregistro_base_url  # Nova aba incluída
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -45,6 +52,7 @@ aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 
 df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
+
 # ===================== Função para gráficos padrão =====================
 def gerar_grafico_barras(df_filtrado, grupo, colunas_sum, titulo):
     bar_data = df_filtrado.groupby(grupo)[colunas_sum].sum().reset_index()
@@ -146,6 +154,36 @@ elif aba_selecionada == "STATUS DE RECEBIMENTO":
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="status_recebimento.csv", mime='text/csv')
+
+# ===================== ABA: PIORES ÍNDICES SUB-REGISTRO =====================
+elif aba_selecionada == "PIORES ÍNDICES SUB-REGISTRO":
+    st.header("⚠️ Municípios com Piores Índices de Sub-registro IBGE")
+
+    # URL direto da aba "subregistro"
+    sub_url = "https://docs.google.com/spreadsheets/d/1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y/gviz/tq?tqx=out:csv&sheet=subregistro"
+
+    df_sub = pd.read_csv(sub_url)
+    df_sub.columns = df_sub.columns.str.strip()
+
+    # Limpar e ordenar pelos piores índices
+    df_sorted = df_sub[['Nome Município', 'Sub-registro IBGE(1)']].sort_values(by='Sub-registro IBGE(1)', ascending=False)
+
+    st.metric("Total de Municípios", df_sorted.shape[0])
+    st.dataframe(df_sorted, use_container_width=True)
+
+    # Gráfico TOP 10 Piores
+    import altair as alt
+    chart = alt.Chart(df_sorted.head(10)).mark_bar().encode(
+        x=alt.X('Sub-registro IBGE(1):Q', title='Índice de Sub-registro (%)'),
+        y=alt.Y('Nome Município:N', sort='-x'),
+        color=alt.value('#d62728'),
+        tooltip=['Nome Município', 'Sub-registro IBGE(1)']
+    ).properties(title='Top 10 Municípios com Piores Índices de Sub-registro')
+    st.altair_chart(chart, use_container_width=True)
+
+    # Download CSV
+    csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
+    st.sidebar.download_button("📥 Baixar CSV Sub-registro", data=csv.encode('utf-8-sig'), file_name="piores_indices_subregistro.csv", mime='text/csv')
 
 # ===================== ABA: GRAPH SITE =====================
 elif aba_selecionada == "GRAPH SITE":
