@@ -10,15 +10,14 @@ st.set_page_config(
 )
 
 # ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
-col1, col2 = st.columns([6, 1])  # Espaço maior à esquerda
+ol1, col2 = st.columns([6, 1])
 
 with col1:
     st.title("📊 CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
     st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
 
 with col2:
-    st.image("dashboard-registro-civil-prov07
-/CGX.png V", width=120)
+    st.image("https://raw.githubusercontent.com/jesusmjunior/dashboard-registro-civil-prov07/main/CGX.png", width=120)
 
 # ===================== LINKS DAS ABAS (CSV) =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
