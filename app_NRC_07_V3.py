@@ -145,6 +145,9 @@ elif aba_selecionada == "STATUS DE RECEBIMENTO":
 elif aba_selecionada == "ENDEREÇO DAS UIS":
     st.header("📌 Endereço das UIS")
 
+    # Corrige eventuais espaços extras nos cabeçalhos
+    df.columns = df.columns.str.strip()
+
     municipios = st.sidebar.multiselect("Município:", df["MUNICÍPIOS"].dropna().unique(), default=df["MUNICÍPIOS"].dropna().unique())
     uf = st.sidebar.multiselect("UF:", df["UF"].dropna().unique(), default=df["UF"].dropna().unique())
 
@@ -158,6 +161,5 @@ elif aba_selecionada == "ENDEREÇO DAS UIS":
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="endereco_uis.csv", mime='text/csv')
-
 # ===================== FINAL =====================
 st.success("✅ Dashboard carregado com sucesso!")
