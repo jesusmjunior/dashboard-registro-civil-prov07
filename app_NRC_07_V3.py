@@ -249,6 +249,31 @@ elif aba_selecionada == "DADOS ORGANIZADOS":
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="dados_organizados.csv", mime='text/csv')
+# ===================== ABA: SUB-REGISTRO =====================
+elif aba_selecionada == "SUB-REGISTRO":
+    st.header("⚠️ Índices de Sub-registro IBGE por Município")
+
+    # Limpar colunas
+    df.columns = df.columns.str.strip()
+
+    # Ordenar pelos piores índices de sub-registro
+    df_sorted = df[['Nome Município', 'Sub-registro IBGE(1)']].sort_values(by='Sub-registro IBGE(1)', ascending=False)
+
+    st.metric("Total de Municípios", df_sorted.shape[0])
+    st.dataframe(df_sorted, use_container_width=True)
+
+    # Gráfico TOP 10 Piores
+    chart = alt.Chart(df_sorted.head(10)).mark_bar().encode(
+        x=alt.X('Sub-registro IBGE(1):Q', title='Índice de Sub-registro (%)'),
+        y=alt.Y('Nome Município:N', sort='-x'),
+        color=alt.value('#d62728'),
+        tooltip=['Nome Município', 'Sub-registro IBGE(1)']
+    ).properties(title='Top 10 Municípios com Piores Índices de Sub-registro')
+    st.altair_chart(chart, use_container_width=True)
+
+    # Download CSV
+    csv = df_sorted.to_csv(index=False, encoding='utf-8-sig')
+    st.sidebar.download_button("📥 Baixar Sub-registro CSV", data=csv.encode('utf-8-sig'), file_name="subregistro.csv", mime='text/csv')
 
 # ===================== FINAL =====================
 st.success("✅ Dashboard carregado com sucesso!Todo os Direitos Reservados! COGEX - NRC 2025")
