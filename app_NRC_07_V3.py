@@ -132,28 +132,50 @@ elif aba_selecionada == "STATUS DE RECEBIMENTO":
 
 # ===================== ABA: GRAPH SITE =====================
 elif aba_selecionada == "GRAPH SITE":
-    st.header("📈 Graph Site")
+    st.header("📈 Nascimentos x Registros - Graph Site")
 
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df.columns = df.columns.str.strip()  # Remove espaços extras
 
     if not df.empty and {'Ano/Mês', 'NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'}.issubset(df.columns):
         st.dataframe(df, use_container_width=True)
 
-        bar_data = df.groupby('Ano/Mês')[['NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)']].sum().reset_index()
-        bar_data_melt = bar_data.melt(id_vars='Ano/Mês', var_name='Tipo', value_name='Total')
+        # Ajusta formato dos dados
+        df_melt = df.melt(id_vars='Ano/Mês', value_vars=['NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'],
+                          var_name='Tipo', value_name='Total')
 
-        bar_chart = alt.Chart(bar_data_melt).mark_bar().encode(
-            x=alt.X("Ano/Mês:N", sort='-y'),
-            y="Total:Q",
-            color="Tipo:N",
+        # Área preenchida
+        area = alt.Chart(df_melt).mark_area(opacity=0.3).encode(
+            x=alt.X('Ano/Mês:N', sort=None),
+            y='Total:Q',
+            color=alt.Color('Tipo:N', scale=alt.Scale(scheme='set1')),
             tooltip=['Ano/Mês', 'Tipo', 'Total']
-        ).properties(title="Nascimentos x Registros por Ano/Mês")
-        st.altair_chart(bar_chart, use_container_width=True)
+        )
 
+        # Linha conectando
+        line = alt.Chart(df_melt).mark_line().encode(
+            x='Ano/Mês:N',
+            y='Total:Q',
+            color='Tipo:N'
+        )
+
+        # Pontos marcados
+        points = alt.Chart(df_melt).mark_point(filled=True).encode(
+            x='Ano/Mês:N',
+            y='Total:Q',
+            color='Tipo:N'
+        )
+
+        # Combinação final
+        grafico = (area + line + points).properties(title="📊 Nascimentos x Registros por Ano/Mês")
+        st.altair_chart(grafico, use_container_width=True)
+
+        # Download CSV
         csv = df.to_csv(index=False, encoding='utf-8-sig')
         st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="graph_site.csv", mime='text/csv')
+
     else:
-        st.warning("Colunas necessárias não encontradas.")
+        st.warning("⚠️ Colunas necessárias não encontradas para gerar gráfico.")
 # ===================== ABA: DADOS ORGANIZADOS =====================
 elif aba_selecionada == "DADOS ORGANIZADOS":
     st.header("📑 Dados Organizados")
@@ -172,46 +194,6 @@ elif aba_selecionada == "DADOS ORGANIZADOS":
 
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="dados_organizados.csv", mime='text/csv')
-    # ===================== ABA: GRAPH SITE =====================
-elif aba_selecionada == "GRAPH SITE":
-    st.header("📈 Nascimentos x Registros - Graph Site")
 
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-
-    if not df.empty and {'Ano/Mês', 'NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'}.issubset(df.columns):
-        st.dataframe(df, use_container_width=True)
-
-        # Prepara dados para Altair
-        df_melt = df.melt(id_vars='Ano/Mês', value_vars=['NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'],
-                          var_name='Tipo', value_name='Total')
-
-        # Gráfico de linha + pontos + preenchimento
-        area_chart = alt.Chart(df_melt).mark_area(opacity=0.3).encode(
-            x=alt.X('Ano/Mês:N', sort=None, title='Ano/Mês'),
-            y=alt.Y('Total:Q', title='Quantidade'),
-            color=alt.Color('Tipo:N', scale=alt.Scale(scheme='category10')),
-            tooltip=['Ano/Mês', 'Tipo', 'Total']
-        )
-
-        line_chart = alt.Chart(df_melt).mark_line().encode(
-            x='Ano/Mês:N',
-            y='Total:Q',
-            color='Tipo:N'
-        )
-
-        point_chart = alt.Chart(df_melt).mark_point(filled=True).encode(
-            x='Ano/Mês:N',
-            y='Total:Q',
-            color='Tipo:N'
-        )
-
-        final_chart = (area_chart + line_chart + point_chart).properties(title="📊 Nascimentos x Registros por Ano/Mês")
-
-        st.altair_chart(final_chart, use_container_width=True)
-
-        csv = df.to_csv(index=False, encoding='utf-8-sig')
-        st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="graph_site.csv", mime='text/csv')
-    else:
-        st.warning("Colunas necessárias não encontradas para gerar gráfico.")
 # ===================== FINAL =====================
 st.success("✅ Dashboard carregado com sucesso!")
