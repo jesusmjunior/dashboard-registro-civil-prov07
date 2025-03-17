@@ -21,7 +21,8 @@ sheet_urls = {
     "(NÃO ALTERE OS FILTROS OU DADOS)": f"{base_url}(N%C3%83O%20ALTERE%20OS%20FILTROS%20OU%20DADOS)",
     "Página11": f"{base_url}P%C3%A1gina11",
     "STATUS DE RECEBIMENTO": f"{base_url}STATUS%20DE%20RECEBIMENTO",
-    "ENDEREÇO DAS UIS": f"{base_url}ENDERE%C3%87O%20DAS%20UIS"
+    "GRAPH SITE": f"{base_url}GRAPH%20SITE",
+    "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS"
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -38,18 +39,6 @@ aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 
 df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
-
-# ===================== Função para gráficos padrão =====================
-def gerar_grafico_barras(df_filtrado, grupo, colunas_sum, titulo):
-    bar_data = df_filtrado.groupby(grupo)[colunas_sum].sum().reset_index()
-    bar_data_melt = bar_data.melt(id_vars=grupo, var_name='Tipo', value_name='Total')
-    bar_chart = alt.Chart(bar_data_melt).mark_bar().encode(
-        x=alt.X(f"{grupo}:N", sort='-y'),
-        y="Total:Q",
-        color="Tipo:N",
-        tooltip=[grupo, 'Tipo', 'Total']
-    ).properties(title=titulo)
-    st.altair_chart(bar_chart, use_container_width=True)
 # ===================== ABA: Respostas ao formulário 2 =====================
 if aba_selecionada == "Respostas ao formulário 2":
     st.header("📝 Respostas ao Formulário 2")
@@ -141,25 +130,47 @@ elif aba_selecionada == "STATUS DE RECEBIMENTO":
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="status_recebimento.csv", mime='text/csv')
 
-# ===================== ABA: ENDEREÇO DAS UIS =====================
-elif aba_selecionada == "ENDEREÇO DAS UIS":
-    st.header("📌 Endereço das UIS")
+# ===================== ABA: GRAPH SITE =====================
+elif aba_selecionada == "GRAPH SITE":
+    st.header("📈 Graph Site")
 
-    # Corrige eventuais espaços extras nos cabeçalhos
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+
+    if not df.empty and {'Ano/Mês', 'NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)'}.issubset(df.columns):
+        st.dataframe(df, use_container_width=True)
+
+        bar_data = df.groupby('Ano/Mês')[['NASCIMENTOS (QTDE)', 'SUM de REGISTROS (QTDE)']].sum().reset_index()
+        bar_data_melt = bar_data.melt(id_vars='Ano/Mês', var_name='Tipo', value_name='Total')
+
+        bar_chart = alt.Chart(bar_data_melt).mark_bar().encode(
+            x=alt.X("Ano/Mês:N", sort='-y'),
+            y="Total:Q",
+            color="Tipo:N",
+            tooltip=['Ano/Mês', 'Tipo', 'Total']
+        ).properties(title="Nascimentos x Registros por Ano/Mês")
+        st.altair_chart(bar_chart, use_container_width=True)
+
+        csv = df.to_csv(index=False, encoding='utf-8-sig')
+        st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="graph_site.csv", mime='text/csv')
+    else:
+        st.warning("Colunas necessárias não encontradas.")
+# ===================== ABA: DADOS ORGANIZADOS =====================
+elif aba_selecionada == "DADOS ORGANIZADOS":
+    st.header("📑 Dados Organizados")
+
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
     df.columns = df.columns.str.strip()
 
-    municipios = st.sidebar.multiselect("Município:", df["MUNICÍPIOS"].dropna().unique(), default=df["MUNICÍPIOS"].dropna().unique())
-    uf = st.sidebar.multiselect("UF:", df["UF"].dropna().unique(), default=df["UF"].dropna().unique())
-
-    df_filtrado = df[(df["MUNICÍPIOS"].isin(municipios)) & (df["UF"].isin(uf))]
+    if not df.empty and 'MUNICÍPIOS' in df.columns:
+        municipios = st.sidebar.multiselect("Município:", df["MUNICÍPIOS"].dropna().unique(), default=df["MUNICÍPIOS"].dropna().unique())
+        df_filtrado = df[df["MUNICÍPIOS"].isin(municipios)]
+    else:
+        df_filtrado = df
 
     st.metric("Total de Registros", df_filtrado.shape[0])
     st.dataframe(df_filtrado, use_container_width=True)
 
-    if {'LATITUDE', 'LONGITUDE'}.issubset(df_filtrado.columns):
-        st.map(df_filtrado.rename(columns={"LATITUDE": "lat", "LONGITUDE": "lon"}))
-
     csv = df_filtrado.to_csv(index=False, encoding='utf-8-sig')
-    st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="endereco_uis.csv", mime='text/csv')
+    st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="dados_organizados.csv", mime='text/csv')
 # ===================== FINAL =====================
 st.success("✅ Dashboard carregado com sucesso!")
