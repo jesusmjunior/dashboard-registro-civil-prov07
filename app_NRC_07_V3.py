@@ -33,7 +33,7 @@ def carregar_planilha(aba):
     return df, origem
 
 # ===================== LOAD DATA =====================
-st.sidebar.header("📂 Seleção de Aba")
+st.sidebar.header("📂 COGEX NRC 2025- PROV 07 - DADOS DO FORMULÁRIO")
 abas_selecionadas = list(sheet_urls.keys())
 aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 
