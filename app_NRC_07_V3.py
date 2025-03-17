@@ -300,6 +300,4 @@ st.markdown("""
     Rua Cumã, nº 300, 1º andar, Edifício Manhattan Center III, Jardim Renascença 2<br>
     São Luís - Maranhão CEP 65.075-700</p>
 """, unsafe_allow_html=True)
-
-st.caption(f"Atualizado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}")
 st.success("✅ Dashboard carregado com sucesso!Todo os Direitos Reservados! COGEX - NRC 2025")
