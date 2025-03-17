@@ -13,7 +13,7 @@ st.set_page_config(
 col1, col2 = st.columns([6, 1])  # Espaço maior à esquerda
 
 with col1:
-    st.title("📊 CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
+    st.title("📊 Relatório de Registro Civil - Unidade Interligada PROV 07 2021 22/02/2021 - CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
     st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
 
 with col2:
