@@ -39,6 +39,17 @@ aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 
 df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
+# ===================== Função para gráficos padrão =====================
+def gerar_grafico_barras(df_filtrado, grupo, colunas_sum, titulo):
+    bar_data = df_filtrado.groupby(grupo)[colunas_sum].sum().reset_index()
+    bar_data_melt = bar_data.melt(id_vars=grupo, var_name='Tipo', value_name='Total')
+    bar_chart = alt.Chart(bar_data_melt).mark_bar().encode(
+        x=alt.X(f"{grupo}:N", sort='-y'),
+        y="Total:Q",
+        color="Tipo:N",
+        tooltip=[grupo, 'Tipo', 'Total']
+    ).properties(title=titulo)
+    st.altair_chart(bar_chart, use_container_width=True)
 # ===================== ABA: Respostas ao formulário 2 =====================
 if aba_selecionada == "Respostas ao formulário 2":
     st.header("📝 Respostas ao Formulário 2")
