@@ -8,6 +8,15 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+# ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
+col1, col2 = st.columns([6, 1])  # Espaço maior à esquerda
+
+with col1:
+    st.title("📊 CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
+    st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
+
+with col2:
+    st.image("https://drive.google.com/uc?id=17Fj08fiVDAjPRwYXsA7RuDNWDatnejgV", width=120)
 # ===================== LINKS DAS ABAS (CSV) =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
