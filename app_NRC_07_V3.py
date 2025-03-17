@@ -91,9 +91,9 @@ elif aba_selecionada == "QUANTITATIVO (2024 E 2025)":
     csv = df.to_csv(index=False, encoding='utf-8-sig')
     st.sidebar.download_button("📥 Baixar CSV", data=csv.encode('utf-8-sig'), file_name="quantitativo_2024_2025.csv", mime='text/csv')
 
-# ===================== ABA: (NÃO ALTERE OS FILTROS OU DADOS) =====================
-elif aba_selecionada == "(NÃO ALTERE OS FILTROS OU DADOS)":
-    st.header("📋 NÃO ALTERE OS FILTROS OU DADOS")
+# ===================== ABA: DADOS FILTRADOS DA CAIXA DE ENTRADA =====================
+elif aba_selecionada == "DADOS FILTRADOS DA CAIXA DE ENTRADA":
+    st.header("📋 DADOS FILTRADOS DA CAIXA DE ENTRADA")
 
     municipios = st.sidebar.multiselect("Município:", df["MUNICÍPIO"].dropna().unique(), default=df["MUNICÍPIO"].dropna().unique())
     df_filtrado = df[df["MUNICÍPIO"].isin(municipios)]
