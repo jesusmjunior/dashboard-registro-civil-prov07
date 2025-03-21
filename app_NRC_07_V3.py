@@ -94,6 +94,13 @@ if aba_selecionada in abas_com_filtros:
         if anos != "Choose an option":
             df = df[df["Ano"] == anos]
 
+# ===================== MOSTRAR DADOS =====================
+else:
+    st.dataframe(df, height=1200, use_container_width=True)
+
+# ===================== DOWNLOAD COMPLETO =====================
+csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
+st.sidebar.download_button("📥 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
 # ===================== NOVA ABA: ANÁLISE DE STATUS =====================
 if aba_selecionada == "ANÁLISE DE STATUS":
     st.header("📊 Análise Detalhada de Envio e Cumprimento")
@@ -102,41 +109,56 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     df['Mês'] = pd.to_numeric(df['Mês'], errors='coerce')
     df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce')
 
+    # Filtros para Município e Ano
     municipios_unicos = df['MUNICÍPIO'].dropna().unique()
     municipio_sel = st.sidebar.selectbox("Selecione um Município para análise:", municipios_unicos)
 
-    df_municipio = df[df['MUNICÍPIO'] == municipio_sel]
+    anos_unicos = df[df['MUNICÍPIO'] == municipio_sel]['Ano'].dropna().unique()
+    ano_sel = st.sidebar.selectbox("Selecione o Ano para análise:", anos_unicos)
 
-    # Contagem de registros
+    # Filtrar dados
+    df_municipio = df[(df['MUNICÍPIO'] == municipio_sel) & (df['Ano'] == ano_sel)]
+
+    # Total de Envios
     total_envios = df_municipio.shape[0]
-    registros_pendentes = 12 - df_municipio['Mês'].nunique()
-
     st.metric("Total de Envios no Ano", total_envios)
-    st.metric("Meses Pendentes", registros_pendentes)
+
+    # Identificar meses pendentes
+    meses_enviados = df_municipio['Mês'].dropna().unique().tolist()
+    meses_todos = list(range(1, 13))
+    meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
+    st.metric("Meses Pendentes", len(meses_pendentes))
+    if meses_pendentes:
+        st.warning(f"Meses não enviados: {meses_pendentes}")
 
     # Verificar duplicados
     duplicados = df_municipio[df_municipio.duplicated(subset=['Mês', 'Ano'], keep=False)]
     if not duplicados.empty:
-        st.warning("⚠️ Foram encontrados registros duplicados para este município.")
+        st.warning("⚠️ Foram encontrados registros duplicados para este município e ano.")
         st.dataframe(duplicados)
 
-    # Gráfico de envios por mês
-    graf = df_municipio.groupby('Mês').size().reset_index(name='Total Envios')
+    # Pontualidade dos envios (até dia 10 do mês seguinte)
+    df_municipio['Carimbo de data/hora'] = pd.to_datetime(df_municipio['Carimbo de data/hora'], errors='coerce')
+    df_municipio['Data Limite'] = pd.to_datetime(df_municipio['Ano'].astype(int).astype(str) + '-' + df_municipio['Mês'].astype(int).astype(str) + '-10')
+    df_municipio['Dentro do Prazo'] = df_municipio['Carimbo de data/hora'] <= df_municipio['Data Limite']
+
+    enviados_dentro = df_municipio['Dentro do Prazo'].sum()
+    enviados_fora = total_envios - enviados_dentro
+    st.metric("Envios Dentro do Prazo", enviados_dentro)
+    st.metric("Envios Fora do Prazo", enviados_fora)
+
+    # Gráfico interativo de envios por mês com status
+    graf = df_municipio.groupby(['Mês', 'Dentro do Prazo']).size().reset_index(name='Total Envios')
+    graf['Status'] = graf['Dentro do Prazo'].apply(lambda x: 'Dentro do Prazo' if x else 'Fora do Prazo')
+
     chart = alt.Chart(graf).mark_bar().encode(
         x=alt.X('Mês:O', title='Mês'),
         y=alt.Y('Total Envios:Q', title='Total Envios'),
-        tooltip=['Mês', 'Total Envios']
-    ).properties(title="Envios por Mês")
+        color=alt.Color('Status:N', scale=alt.Scale(domain=['Dentro do Prazo', 'Fora do Prazo'], range=['green', 'red'])),
+        tooltip=['Mês', 'Total Envios', 'Status']
+    ).properties(title=f"Envios por Mês - {municipio_sel}/{ano_sel}")
     st.altair_chart(chart, use_container_width=True)
 
     # Mostrar detalhes
     st.subheader("📄 Detalhamento dos Envios")
     st.dataframe(df_municipio, use_container_width=True)
-
-# ===================== MOSTRAR DADOS =====================
-else:
-    st.dataframe(df, height=1200, use_container_width=True)
-
-# ===================== DOWNLOAD COMPLETO =====================
-csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
-st.sidebar.download_button("📥 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
