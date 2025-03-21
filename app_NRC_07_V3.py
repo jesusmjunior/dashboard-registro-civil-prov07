@@ -41,6 +41,8 @@ base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:c
 subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
 subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
 
+csv_publicado = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRtKiqlosLL5_CJgGom7BlWpFYExhLTQEjQT_Pdgnv3uEYMlWPpsSeaxfjqy0IxTluVlKSpcZ1IoXQY/pub?output=csv"
+
 sheet_urls = {
     "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202",
     "QUANTITATIVO (2024 E 2025)": f"{base_url}QUANTITATIVO%20(2024%20E%202025)",
@@ -50,7 +52,7 @@ sheet_urls = {
     "GRAPH SITE": f"{base_url}GRAPH%20SITE",
     "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
     "SUB-REGISTRO": subregistro_base_url,
-    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"
+    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"  # NOVA ABA baseada na aba RESPOSTAS
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -102,25 +104,20 @@ st.sidebar.download_button("📥 Baixar Todos os Dados CSV", data=csv_completo.e
 if aba_selecionada == "ANÁLISE DE STATUS":
     st.header("📊 Análise Detalhada de Envio e Cumprimento")
 
-    # Preparação dos dados
     df['Mês'] = pd.to_numeric(df['Mês'], errors='coerce')
     df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce')
 
-    # Filtros para Município e Ano
     municipios_unicos = df['MUNICÍPIO'].dropna().unique()
     municipio_sel = st.sidebar.selectbox("Selecione um Município para análise:", municipios_unicos)
 
     anos_unicos = df[df['MUNICÍPIO'] == municipio_sel]['Ano'].dropna().unique()
     ano_sel = st.sidebar.selectbox("Selecione o Ano para análise:", anos_unicos)
 
-    # Filtrar dados
     df_municipio = df[(df['MUNICÍPIO'] == municipio_sel) & (df['Ano'] == ano_sel)]
 
-    # Total de Envios
     total_envios = df_municipio.shape[0]
     st.metric("Total de Envios no Ano", total_envios)
 
-    # Identificar meses pendentes
     meses_enviados = df_municipio['Mês'].dropna().unique().tolist()
     meses_todos = list(range(1, 13))
     meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
@@ -128,21 +125,16 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     if meses_pendentes:
         st.warning(f"Meses não enviados: {meses_pendentes}")
 
-    # Verificar duplicados
     duplicados = df_municipio[df_municipio.duplicated(subset=['Mês', 'Ano'], keep=False)]
     if not duplicados.empty:
         st.warning("⚠️ Foram encontrados registros duplicados para este município e ano.")
         st.dataframe(duplicados)
 
-    # Pontualidade dos envios (até dia 10 do mês seguinte)
+    # ===== CORREÇÃO DO ERRO AQUI =====
     df_municipio['Carimbo de data/hora'] = pd.to_datetime(df_municipio['Carimbo de data/hora'], errors='coerce')
-
-    # Converter Ano e Mês com suporte a NaN
-    df_municipio['Ano'] = pd.to_numeric(df_municipio['Ano'], errors='coerce').astype('Int64')
-    df_municipio['Mês'] = pd.to_numeric(df_municipio['Mês'], errors='coerce').astype('Int64')
-
     df_municipio['Data Limite'] = pd.to_datetime(
-        df_municipio['Ano'].astype(str) + '-' + df_municipio['Mês'].astype(str) + '-10',
+        df_municipio['Ano'].fillna(0).astype(int).astype(str) + '-' +
+        df_municipio['Mês'].fillna(1).astype(int).astype(str) + '-10',
         errors='coerce'
     )
     df_municipio['Dentro do Prazo'] = df_municipio['Carimbo de data/hora'] <= df_municipio['Data Limite']
@@ -152,7 +144,6 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     st.metric("Envios Dentro do Prazo", enviados_dentro)
     st.metric("Envios Fora do Prazo", enviados_fora)
 
-    # Gráfico interativo
     graf = df_municipio.groupby(['Mês', 'Dentro do Prazo']).size().reset_index(name='Total Envios')
     graf['Status'] = graf['Dentro do Prazo'].apply(lambda x: 'Dentro do Prazo' if x else 'Fora do Prazo')
 
