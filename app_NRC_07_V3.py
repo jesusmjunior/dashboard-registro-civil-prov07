@@ -41,8 +41,6 @@ base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:c
 subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
 subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
 
-csv_publicado = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRtKiqlosLL5_CJgGom7BlWpFYExhLTQEjQT_Pdgnv3uEYMlWPpsSeaxfjqy0IxTluVlKSpcZ1IoXQY/pub?output=csv"
-
 sheet_urls = {
     "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202",
     "QUANTITATIVO (2024 E 2025)": f"{base_url}QUANTITATIVO%20(2024%20E%202025)",
@@ -52,8 +50,7 @@ sheet_urls = {
     "GRAPH SITE": f"{base_url}GRAPH%20SITE",
     "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
     "SUB-REGISTRO": subregistro_base_url,
-    "DADOS COMPLETOS": csv_publicado,
-    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"  # NOVA ABA baseada na aba RESPOSTAS
+    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -79,8 +76,7 @@ abas_com_filtros = [
     "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO",
     "STATUS DE RECEBIMENTO",
     "DADOS ORGANIZADOS",
-    "SUB-REGISTRO",
-    "DADOS COMPLETOS"
+    "SUB-REGISTRO"
 ]
 
 if aba_selecionada in abas_com_filtros:
@@ -101,6 +97,7 @@ else:
 # ===================== DOWNLOAD COMPLETO =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
 st.sidebar.download_button("📥 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
+
 # ===================== NOVA ABA: ANÁLISE DE STATUS =====================
 if aba_selecionada == "ANÁLISE DE STATUS":
     st.header("📊 Análise Detalhada de Envio e Cumprimento")
@@ -139,7 +136,15 @@ if aba_selecionada == "ANÁLISE DE STATUS":
 
     # Pontualidade dos envios (até dia 10 do mês seguinte)
     df_municipio['Carimbo de data/hora'] = pd.to_datetime(df_municipio['Carimbo de data/hora'], errors='coerce')
-    df_municipio['Data Limite'] = pd.to_datetime(df_municipio['Ano'].astype(int).astype(str) + '-' + df_municipio['Mês'].astype(int).astype(str) + '-10')
+
+    # Converter Ano e Mês com suporte a NaN
+    df_municipio['Ano'] = pd.to_numeric(df_municipio['Ano'], errors='coerce').astype('Int64')
+    df_municipio['Mês'] = pd.to_numeric(df_municipio['Mês'], errors='coerce').astype('Int64')
+
+    df_municipio['Data Limite'] = pd.to_datetime(
+        df_municipio['Ano'].astype(str) + '-' + df_municipio['Mês'].astype(str) + '-10',
+        errors='coerce'
+    )
     df_municipio['Dentro do Prazo'] = df_municipio['Carimbo de data/hora'] <= df_municipio['Data Limite']
 
     enviados_dentro = df_municipio['Dentro do Prazo'].sum()
@@ -147,7 +152,7 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     st.metric("Envios Dentro do Prazo", enviados_dentro)
     st.metric("Envios Fora do Prazo", enviados_fora)
 
-    # Gráfico interativo de envios por mês com status
+    # Gráfico interativo
     graf = df_municipio.groupby(['Mês', 'Dentro do Prazo']).size().reset_index(name='Total Envios')
     graf['Status'] = graf['Dentro do Prazo'].apply(lambda x: 'Dentro do Prazo' if x else 'Fora do Prazo')
 
@@ -159,6 +164,5 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     ).properties(title=f"Envios por Mês - {municipio_sel}/{ano_sel}")
     st.altair_chart(chart, use_container_width=True)
 
-    # Mostrar detalhes
     st.subheader("📄 Detalhamento dos Envios")
     st.dataframe(df_municipio, use_container_width=True)
