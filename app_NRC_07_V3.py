@@ -29,7 +29,6 @@ base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:c
 subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
 subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
 
-# Link do CSV Publicado Online
 csv_publicado = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRtKiqlosLL5_CJgGom7BlWpFYExhLTQEjQT_Pdgnv3uEYMlWPpsSeaxfjqy0IxTluVlKSpcZ1IoXQY/pub?output=csv"
 
 sheet_urls = {
@@ -41,7 +40,7 @@ sheet_urls = {
     "GRAPH SITE": f"{base_url}GRAPH%20SITE",
     "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
     "SUB-REGISTRO": subregistro_base_url,
-    "DADOS COMPLETOS": csv_publicado  # <<<<<< NOVA ABA COM DADOS COMPLETOS
+    "DADOS COMPLETOS": csv_publicado
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -60,22 +59,29 @@ aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
 
-# ===================== MOSTRAR DADOS =====================
-if aba_selecionada == "DADOS COMPLETOS":
-    st.header("📑 Dados Completos do Google Sheets")
+# ===================== APLICAR FILTROS NAS ABAS SELECIONADAS =====================
+abas_com_filtros = [
+    "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA",
+    "DADOS FILTRADOS DA CAIXA DE ENTRADA",
+    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO",
+    "STATUS DE RECEBIMENTO",
+    "DADOS ORGANIZADOS",
+    "SUB-REGISTRO",
+    "DADOS COMPLETOS"
+]
 
-    # Filtros
+if aba_selecionada in abas_com_filtros:
     if 'MUNICÍPIO' in df.columns:
-        municipios = st.sidebar.multiselect("Filtrar por Município:", df["MUNICÍPIO"].dropna().unique())
-        if municipios:
-            df = df[df["MUNICÍPIO"].isin(municipios)]
+        municipios = st.sidebar.selectbox("Filtrar por Município:", ["Choose an option"] + list(df["MUNICÍPIO"].dropna().unique()))
+        if municipios != "Choose an option":
+            df = df[df["MUNICÍPIO"] == municipios]
 
     if 'Ano' in df.columns:
-        anos = st.sidebar.multiselect("Filtrar por Ano:", df["Ano"].dropna().unique())
-        if anos:
-            df = df[df["Ano"].isin(anos)]
+        anos = st.sidebar.selectbox("Filtrar por Ano:", ["Choose an option"] + list(df["Ano"].dropna().unique()))
+        if anos != "Choose an option":
+            df = df[df["Ano"] == anos]
 
-# Exibe tudo sempre
+# ===================== MOSTRAR TODAS AS LINHAS =====================
 st.dataframe(df, height=1200, use_container_width=True)
 
 # ===================== DOWNLOAD COMPLETO DOS DADOS =====================
