@@ -84,15 +84,24 @@ st.dataframe(df, height=1000, use_container_width=True)
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
 st.sidebar.download_button("\U0001F4E5 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
 
-# ===================== CHECAR MESES PENDENTES =====================
+# ===================== CHECAR MESES PENDENTES COM ROBOZINHO =====================
 if 'MUNICÍPIO' in df.columns and 'Mês' in df.columns and 'Ano' in df.columns:
-    st.header("\U0001F4C5 Checagem de Meses Pendentes")
+    st.header("\U0001F916 Análise de Pendência por Unidade")
     municipios_unicos = df['MUNICÍPIO'].dropna().unique()
-    for municipio in municipios_unicos:
-        df_municipio = df[df['MUNICÍPIO'] == municipio]
-        for ano in df_municipio['Ano'].dropna().unique():
-            meses_enviados = df_municipio[df_municipio['Ano'] == ano]['Mês'].dropna().astype(int).unique().tolist()
-            meses_todos = list(range(1, 13))
-            meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
-            if meses_pendentes:
-                st.warning(f"Município: {municipio} | Ano: {int(float(ano))} | Meses pendentes: {meses_pendentes}")
+    municipio_sel = st.selectbox("Selecione um Município:", municipios_unicos)
+
+    anos_unicos = df[df['MUNICÍPIO'] == municipio_sel]['Ano'].dropna().unique()
+    ano_sel = st.selectbox("Selecione o Ano:", anos_unicos)
+
+    df_municipio = df[(df['MUNICÍPIO'] == municipio_sel) & (df['Ano'] == int(ano_sel))]
+    meses_enviados = df_municipio['Mês'].dropna().astype(int).unique().tolist()
+
+    meses_todos = list(range(1, 13))
+    meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
+
+    if meses_pendentes:
+        st.error(f"🤖 Município **{municipio_sel}** - Ano **{ano_sel}**\n\nEnviou: **{len(meses_enviados)} meses**\n\n🔴 Meses pendentes: {meses_pendentes}")
+        st.markdown("<div style='font-size:50px;'>🤖🚩</div>", unsafe_allow_html=True)
+    else:
+        st.success(f"🤖 Município **{municipio_sel}** - Ano **{ano_sel}**\n\n✅ Todos os meses enviados!")
+        st.markdown("<div style='font-size:50px;'>🤖🎉</div>", unsafe_allow_html=True)
