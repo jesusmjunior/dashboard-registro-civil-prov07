@@ -13,17 +13,9 @@ st.set_page_config(
 def preencher_ano_mes(df):
     if 'Carimbo de data/hora' in df.columns:
         df['Carimbo de data/hora'] = pd.to_datetime(df['Carimbo de data/hora'], errors='coerce')
-        if 'Ano' in df.columns:
-            df['Ano'] = df['Ano'].fillna(df['Carimbo de data/hora'].dt.year.astype(str))
-        if 'Mês' in df.columns:
-            df['Mês'] = df['Mês'].fillna(df['Carimbo de data/hora'].dt.month.astype(str))
-            df['Mês Nome'] = df['Mês'].apply(lambda x: pd.to_datetime(f'2020-{int(float(x))}-01', errors='coerce').strftime('%B') if pd.notnull(x) and str(x).isdigit() else '')
-    else:
-        if 'Ano' in df.columns:
-            df['Ano'] = df['Ano'].fillna('')
-        if 'Mês' in df.columns:
-            df['Mês'] = df['Mês'].fillna('')
-            df['Mês Nome'] = ''
+        df['Ano'] = df['Carimbo de data/hora'].dt.year
+        df['Mês'] = df['Carimbo de data/hora'].dt.month
+        df['Mês Nome'] = df['Carimbo de data/hora'].dt.strftime('%B')
     return df
 
 # ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
@@ -85,33 +77,22 @@ aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
 
-# ===================== APLICAR FILTROS =====================
-abas_sem_filtros = [
-    "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA",
-    "QUANTITATIVO (2024 E 2025)",
-    "DADOS FILTRADOS DA CAIXA DE ENTRADA",
-    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO"
-]
-
-if aba_selecionada not in abas_sem_filtros:
-    if 'MUNICÍPIO' in df.columns:
-        municipios = st.sidebar.selectbox("Filtrar por Município:", ["Choose an option"] + sorted(df["MUNICÍPIO"].dropna().unique()))
-        if municipios != "Choose an option":
-            df = df[df["MUNICÍPIO"] == municipios]
-
-    if 'Ano' in df.columns:
-        anos = st.sidebar.selectbox("Filtrar por Ano:", ["Choose an option"] + sorted(df["Ano"].dropna().unique()))
-        if anos != "Choose an option":
-            df = df[df["Ano"] == anos]
-
-    if 'Mês Nome' in df.columns:
-        meses = st.sidebar.selectbox("Filtrar por Mês:", ["Choose an option"] + sorted(df["Mês Nome"].dropna().unique()))
-        if meses != "Choose an option":
-            df = df[df["Mês Nome"] == meses]
-
 # ===================== MOSTRAR DADOS =====================
 st.dataframe(df, height=1000, use_container_width=True)
 
 # ===================== DOWNLOAD COMPLETO =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
 st.sidebar.download_button("\U0001F4E5 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
+
+# ===================== CHECAR MESES PENDENTES =====================
+if 'MUNICÍPIO' in df.columns and 'Mês' in df.columns and 'Ano' in df.columns:
+    st.header("\U0001F4C5 Checagem de Meses Pendentes")
+    municipios_unicos = df['MUNICÍPIO'].dropna().unique()
+    for municipio in municipios_unicos:
+        df_municipio = df[df['MUNICÍPIO'] == municipio]
+        for ano in df_municipio['Ano'].dropna().unique():
+            meses_enviados = df_municipio[df_municipio['Ano'] == ano]['Mês'].dropna().astype(int).unique().tolist()
+            meses_todos = list(range(1, 13))
+            meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
+            if meses_pendentes:
+                st.warning(f"Município: {municipio} | Ano: {int(float(ano))} | Meses pendentes: {meses_pendentes}")
