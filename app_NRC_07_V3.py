@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import altair as alt
 
 # ===================== CONFIGURAÇÃO =====================
 st.set_page_config(
@@ -70,8 +69,8 @@ df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
 
 # ===================== MOSTRAR TODAS AS LINHAS =====================
-# SEM LIMITAÇÃO — Streamlit já exibe todas
-st.dataframe(df, use_container_width=True)
+# GARANTIR TODAS AS LINHAS EXIBIDAS:
+st.dataframe(df, height=1200, use_container_width=True)
 
 # ===================== DOWNLOAD COMPLETO DOS DADOS =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
