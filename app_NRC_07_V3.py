@@ -13,17 +13,15 @@ st.set_page_config(
 col1, col2 = st.columns([6, 1])
 
 with col1:
-    st.title("📊 Relatório de Registro Civil - Unidade Interligada PROV 07 2021 22/02/2021 - CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
-    st.subheader("📄 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
+    st.title("\U0001F4CA Relatório de Registro Civil - Unidade Interligada PROV 07 2021 22/02/2021 - CORREGEDORIA DO FORO EXTRAJUDICIAL NRC 2025")
+    st.subheader("\U0001F4C4 DADOS DO FORMULÁRIO OBRIGATÓRIO DAS UNIDADES INTERLIGADAS - PROV 07")
 
 with col2:
     st.image("https://raw.githubusercontent.com/jesusmjunior/dashboard-registro-civil-prov07/main/CGX.png", width=120)
 
-# ===================== AVISO =====================
-st.warning("🚨 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
-st.markdown("[📝 **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
+st.warning("\U0001F6A8 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
+st.markdown("[\U0001F4DD **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
 
-# ===================== RESUMO DO PROVIMENTO =====================
 with st.expander("ℹ️ Sobre o Provimento 07/2021 - Clique para detalhes"):
     st.markdown("""
 **Resumo do Provimento CGJ:**
@@ -52,7 +50,7 @@ sheet_urls = {
     "GRAPH SITE": f"{base_url}GRAPH%20SITE",
     "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
     "SUB-REGISTRO": subregistro_base_url,
-    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"  # NOVA ABA baseada na aba RESPOSTAS
+    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -60,11 +58,17 @@ sheet_urls = {
 def carregar_planilha(aba):
     df = pd.read_csv(sheet_urls[aba], low_memory=False, dtype=str)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    df['Carimbo de data/hora'] = pd.to_datetime(df['Carimbo de data/hora'], errors='coerce')
+
+    if 'Ano' in df.columns:
+        df['Ano'] = df['Ano'].fillna(df['Carimbo de data/hora'].dt.year.astype(str))
+    if 'Mês' in df.columns:
+        df['Mês'] = df['Mês'].fillna(df['Carimbo de data/hora'].dt.month.astype(str))
     origem = "Planilha Pública Online (CSV)"
     return df, origem
 
 # ===================== LOAD DATA =====================
-st.sidebar.header("📂 COGEX NRC 2025- PROV 07 - DADOS DO FORMULÁRIO")
+st.sidebar.header("\U0001F4C2 COGEX NRC 2025- PROV 07 - DADOS DO FORMULÁRIO")
 abas_selecionadas = list(sheet_urls.keys())
 aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 
@@ -72,37 +76,34 @@ df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
 
 # ===================== APLICAR FILTROS =====================
-abas_com_filtros = [
+abas_sem_filtros = [
     "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA",
+    "QUANTITATIVO (2024 E 2025)",
     "DADOS FILTRADOS DA CAIXA DE ENTRADA",
-    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO",
-    "STATUS DE RECEBIMENTO",
-    "DADOS ORGANIZADOS",
-    "SUB-REGISTRO"
+    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO"
 ]
 
-if aba_selecionada in abas_com_filtros:
+if aba_selecionada not in abas_sem_filtros:
     if 'MUNICÍPIO' in df.columns:
-        municipios = st.sidebar.selectbox("Filtrar por Município:", ["Choose an option"] + list(df["MUNICÍPIO"].dropna().unique()))
+        municipios = st.sidebar.selectbox("Filtrar por Município:", ["Choose an option"] + sorted(df["MUNICÍPIO"].dropna().unique()))
         if municipios != "Choose an option":
             df = df[df["MUNICÍPIO"] == municipios]
 
     if 'Ano' in df.columns:
-        anos = st.sidebar.selectbox("Filtrar por Ano:", ["Choose an option"] + list(df["Ano"].dropna().unique()))
+        anos = st.sidebar.selectbox("Filtrar por Ano:", ["Choose an option"] + sorted(df["Ano"].dropna().unique()))
         if anos != "Choose an option":
             df = df[df["Ano"] == anos]
 
 # ===================== MOSTRAR DADOS =====================
-else:
-    st.dataframe(df, height=1200, use_container_width=True)
+st.dataframe(df, height=1000, use_container_width=True)
 
 # ===================== DOWNLOAD COMPLETO =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
-st.sidebar.download_button("📥 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
+st.sidebar.download_button("\U0001F4E5 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
 
-# ===================== NOVA ABA: ANÁLISE DE STATUS =====================
+# ===================== ANÁLISE DE STATUS =====================
 if aba_selecionada == "ANÁLISE DE STATUS":
-    st.header("📊 Análise Detalhada de Envio e Cumprimento")
+    st.header("\U0001F4CA Análise Detalhada de Envio e Cumprimento")
 
     df['Mês'] = pd.to_numeric(df['Mês'], errors='coerce')
     df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce')
@@ -130,8 +131,6 @@ if aba_selecionada == "ANÁLISE DE STATUS":
         st.warning("⚠️ Foram encontrados registros duplicados para este município e ano.")
         st.dataframe(duplicados)
 
-    # ===== CORREÇÃO DO ERRO AQUI =====
-    df_municipio['Carimbo de data/hora'] = pd.to_datetime(df_municipio['Carimbo de data/hora'], errors='coerce')
     df_municipio['Data Limite'] = pd.to_datetime(
         df_municipio['Ano'].fillna(0).astype(int).astype(str) + '-' +
         df_municipio['Mês'].fillna(1).astype(int).astype(str) + '-10',
@@ -155,5 +154,5 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     ).properties(title=f"Envios por Mês - {municipio_sel}/{ano_sel}")
     st.altair_chart(chart, use_container_width=True)
 
-    st.subheader("📄 Detalhamento dos Envios")
+    st.subheader("\U0001F4C4 Detalhamento dos Envios")
     st.dataframe(df_municipio, use_container_width=True)
