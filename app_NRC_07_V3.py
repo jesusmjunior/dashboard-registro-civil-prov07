@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
+from streamlit_extras.let_it_rain import rain
 
 # ===================== CONFIGURAÇÃO =====================
 st.set_page_config(
@@ -11,13 +12,18 @@ st.set_page_config(
 
 # ===================== FUNÇÃO PADRONIZADA PARA COMPLETAR CAMPOS =====================
 def preencher_ano_mes(df):
-    df['Carimbo de data/hora'] = pd.to_datetime(df['Carimbo de data/hora'], errors='coerce')
-
-    if 'Ano' in df.columns:
-        df['Ano'] = df['Ano'].fillna(df['Carimbo de data/hora'].dt.year.astype(str))
-    if 'Mês' in df.columns:
-        df['Mês'] = df['Mês'].fillna(df['Carimbo de data/hora'].dt.month.astype(str))
-        df['Mês Nome'] = df['Mês'].apply(lambda x: pd.to_datetime(f'2020-{int(float(x))}-01', errors='coerce').strftime('%B') if pd.notnull(x) and str(x).isdigit() else '')
+    if 'Carimbo de data/hora' in df.columns:
+        df['Carimbo de data/hora'] = pd.to_datetime(df['Carimbo de data/hora'], errors='coerce')
+        if 'Ano' in df.columns:
+            df['Ano'] = df['Ano'].fillna(df['Carimbo de data/hora'].dt.year.astype(str))
+        if 'Mês' in df.columns:
+            df['Mês'] = df['Mês'].fillna(df['Carimbo de data/hora'].dt.month.astype(str))
+            df['Mês Nome'] = df['Mês'].apply(lambda x: pd.to_datetime(f'2020-{int(float(x))}-01', errors='coerce').strftime('%B') if pd.notnull(x) and str(x).isdigit() else '')
+    else:
+        if 'Ano' in df.columns:
+            df['Ano'] = df['Ano'].fillna('')
+        if 'Mês' in df.columns:
+            df['Mês'] = df['Mês'].fillna('')
     return df
 
 # ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
@@ -98,6 +104,11 @@ if aba_selecionada not in abas_sem_filtros:
         if anos != "Choose an option":
             df = df[df["Ano"] == anos]
 
+    if 'Mês Nome' in df.columns:
+        meses = st.sidebar.selectbox("Filtrar por Mês:", ["Choose an option"] + sorted(df["Mês Nome"].dropna().unique()))
+        if meses != "Choose an option":
+            df = df[df["Mês Nome"] == meses]
+
 # ===================== MOSTRAR DADOS =====================
 st.dataframe(df, height=1000, use_container_width=True)
 
@@ -129,6 +140,7 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     st.metric("Meses Pendentes", len(meses_pendentes))
     if meses_pendentes:
         st.warning(f"Meses não enviados: {meses_pendentes}")
+        rain(emoji="🤖", font_size=30, falling_speed=5, animation_length="infinite")
 
     duplicados = df_municipio[df_municipio.duplicated(subset=['Mês', 'Ano'], keep=False)]
     if not duplicados.empty:
@@ -142,4 +154,21 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     )
     df_municipio['Dentro do Prazo'] = df_municipio['Carimbo de data/hora'] <= df_municipio['Data Limite']
 
-    enviados_d
+    enviados_dentro = df_municipio['Dentro do Prazo'].sum()
+    enviados_fora = total_envios - enviados_dentro
+    st.metric("Envios Dentro do Prazo", enviados_dentro)
+    st.metric("Envios Fora do Prazo", enviados_fora)
+
+    graf = df_municipio.groupby(['Mês', 'Dentro do Prazo']).size().reset_index(name='Total Envios')
+    graf['Status'] = graf['Dentro do Prazo'].apply(lambda x: 'Dentro do Prazo' if x else 'Fora do Prazo')
+
+    chart = alt.Chart(graf).mark_bar().encode(
+        x=alt.X('Mês:O', title='Mês'),
+        y=alt.Y('Total Envios:Q', title='Total Envios'),
+        color=alt.Color('Status:N', scale=alt.Scale(domain=['Dentro do Prazo', 'Fora do Prazo'], range=['green', 'red'])),
+        tooltip=['Mês', 'Total Envios', 'Status']
+    ).properties(title=f"Envios por Mês - {municipio_sel}/{ano_sel}")
+    st.altair_chart(chart, use_container_width=True)
+
+    st.subheader("\U0001F4C4 Detalhamento dos Envios")
+    st.dataframe(df_municipio, use_container_width=True)
