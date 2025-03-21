@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import altair as alt
 
 # ===================== CONFIGURAÇÃO =====================
 st.set_page_config(
@@ -51,7 +52,8 @@ sheet_urls = {
     "GRAPH SITE": f"{base_url}GRAPH%20SITE",
     "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
     "SUB-REGISTRO": subregistro_base_url,
-    "DADOS COMPLETOS": csv_publicado
+    "DADOS COMPLETOS": csv_publicado,
+    "ANÁLISE DE STATUS": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202"  # NOVA ABA baseada na aba RESPOSTAS
 }
 
 # ===================== FUNÇÃO: Carregar Dados =====================
@@ -92,8 +94,48 @@ if aba_selecionada in abas_com_filtros:
         if anos != "Choose an option":
             df = df[df["Ano"] == anos]
 
+# ===================== NOVA ABA: ANÁLISE DE STATUS =====================
+if aba_selecionada == "ANÁLISE DE STATUS":
+    st.header("📊 Análise Detalhada de Envio e Cumprimento")
+
+    # Preparação dos dados
+    df['Mês'] = pd.to_numeric(df['Mês'], errors='coerce')
+    df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce')
+
+    municipios_unicos = df['MUNICÍPIO'].dropna().unique()
+    municipio_sel = st.sidebar.selectbox("Selecione um Município para análise:", municipios_unicos)
+
+    df_municipio = df[df['MUNICÍPIO'] == municipio_sel]
+
+    # Contagem de registros
+    total_envios = df_municipio.shape[0]
+    registros_pendentes = 12 - df_municipio['Mês'].nunique()
+
+    st.metric("Total de Envios no Ano", total_envios)
+    st.metric("Meses Pendentes", registros_pendentes)
+
+    # Verificar duplicados
+    duplicados = df_municipio[df_municipio.duplicated(subset=['Mês', 'Ano'], keep=False)]
+    if not duplicados.empty:
+        st.warning("⚠️ Foram encontrados registros duplicados para este município.")
+        st.dataframe(duplicados)
+
+    # Gráfico de envios por mês
+    graf = df_municipio.groupby('Mês').size().reset_index(name='Total Envios')
+    chart = alt.Chart(graf).mark_bar().encode(
+        x=alt.X('Mês:O', title='Mês'),
+        y=alt.Y('Total Envios:Q', title='Total Envios'),
+        tooltip=['Mês', 'Total Envios']
+    ).properties(title="Envios por Mês")
+    st.altair_chart(chart, use_container_width=True)
+
+    # Mostrar detalhes
+    st.subheader("📄 Detalhamento dos Envios")
+    st.dataframe(df_municipio, use_container_width=True)
+
 # ===================== MOSTRAR DADOS =====================
-st.dataframe(df, height=1200, use_container_width=True)
+else:
+    st.dataframe(df, height=1200, use_container_width=True)
 
 # ===================== DOWNLOAD COMPLETO =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
