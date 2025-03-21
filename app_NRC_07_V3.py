@@ -9,6 +9,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# ===================== FUNÇÃO PADRONIZADA PARA COMPLETAR CAMPOS =====================
+def preencher_ano_mes(df):
+    df['Carimbo de data/hora'] = pd.to_datetime(df['Carimbo de data/hora'], errors='coerce')
+
+    if 'Ano' in df.columns:
+        df['Ano'] = df['Ano'].fillna(df['Carimbo de data/hora'].dt.year.astype(str))
+    if 'Mês' in df.columns:
+        df['Mês'] = df['Mês'].fillna(df['Carimbo de data/hora'].dt.month.astype(str))
+        df['Mês Nome'] = df['Mês'].apply(lambda x: pd.to_datetime(f'2020-{int(float(x))}-01', errors='coerce').strftime('%B') if pd.notnull(x) and str(x).isdigit() else '')
+    return df
+
 # ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
 col1, col2 = st.columns([6, 1])
 
@@ -56,12 +67,7 @@ sheet_urls = {
 def carregar_planilha(aba):
     df = pd.read_csv(sheet_urls[aba], low_memory=False, dtype=str)
     df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
-    df['Carimbo de data/hora'] = pd.to_datetime(df['Carimbo de data/hora'], errors='coerce')
-
-    if 'Ano' in df.columns:
-        df['Ano'] = df['Ano'].fillna(df['Carimbo de data/hora'].dt.year.astype(str))
-    if 'Mês' in df.columns:
-        df['Mês'] = df['Mês'].fillna(df['Carimbo de data/hora'].dt.month.astype(str))
+    df = preencher_ano_mes(df)
     origem = "Planilha Pública Online (CSV)"
     return df, origem
 
@@ -136,21 +142,4 @@ if aba_selecionada == "ANÁLISE DE STATUS":
     )
     df_municipio['Dentro do Prazo'] = df_municipio['Carimbo de data/hora'] <= df_municipio['Data Limite']
 
-    enviados_dentro = df_municipio['Dentro do Prazo'].sum()
-    enviados_fora = total_envios - enviados_dentro
-    st.metric("Envios Dentro do Prazo", enviados_dentro)
-    st.metric("Envios Fora do Prazo", enviados_fora)
-
-    graf = df_municipio.groupby(['Mês', 'Dentro do Prazo']).size().reset_index(name='Total Envios')
-    graf['Status'] = graf['Dentro do Prazo'].apply(lambda x: 'Dentro do Prazo' if x else 'Fora do Prazo')
-
-    chart = alt.Chart(graf).mark_bar().encode(
-        x=alt.X('Mês:O', title='Mês'),
-        y=alt.Y('Total Envios:Q', title='Total Envios'),
-        color=alt.Color('Status:N', scale=alt.Scale(domain=['Dentro do Prazo', 'Fora do Prazo'], range=['green', 'red'])),
-        tooltip=['Mês', 'Total Envios', 'Status']
-    ).properties(title=f"Envios por Mês - {municipio_sel}/{ano_sel}")
-    st.altair_chart(chart, use_container_width=True)
-
-    st.subheader("\U0001F4C4 Detalhamento dos Envios")
-    st.dataframe(df_municipio, use_container_width=True)
+    enviados_d
