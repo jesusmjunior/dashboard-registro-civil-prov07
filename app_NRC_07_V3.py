@@ -22,6 +22,17 @@ with col2:
 st.warning("🚨 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
 st.markdown("[📝 **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
 
+# ===================== RESUMO DO PROVIMENTO =====================
+with st.expander("ℹ️ Sobre o Provimento 07/2021 - Clique para detalhes"):
+    st.markdown("""
+**Resumo do Provimento CGJ:**
+
+A instalação de unidades interligadas em hospitais é obrigatória, independentemente do número de partos. Os registros de nascimento e óbito são feitos nessas unidades com livro próprio. Os serviços devem enviar relatório mensal até o dia 10 via [Formulário Online](https://forms.gle/vETZAjAStN3F9YHx9), sob pena de sanções administrativas.
+
+**Desembargador José Jorge Figueiredo dos Anjos**  
+Corregedor-Geral da Justiça (Biênio 2024-2026)
+""")
+
 # ===================== LINKS DAS ABAS =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
 base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
@@ -59,7 +70,7 @@ aba_selecionada = st.sidebar.radio("Selecione uma aba:", abas_selecionadas)
 df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
 
-# ===================== APLICAR FILTROS NAS ABAS SELECIONADAS =====================
+# ===================== APLICAR FILTROS =====================
 abas_com_filtros = [
     "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA",
     "DADOS FILTRADOS DA CAIXA DE ENTRADA",
@@ -81,9 +92,9 @@ if aba_selecionada in abas_com_filtros:
         if anos != "Choose an option":
             df = df[df["Ano"] == anos]
 
-# ===================== MOSTRAR TODAS AS LINHAS =====================
+# ===================== MOSTRAR DADOS =====================
 st.dataframe(df, height=1200, use_container_width=True)
 
-# ===================== DOWNLOAD COMPLETO DOS DADOS =====================
+# ===================== DOWNLOAD COMPLETO =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
 st.sidebar.download_button("📥 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
