@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import altair as alt
-from streamlit_extras.let_it_rain import rain
 
 # ===================== CONFIGURAÇÃO =====================
 st.set_page_config(
@@ -24,6 +23,7 @@ def preencher_ano_mes(df):
             df['Ano'] = df['Ano'].fillna('')
         if 'Mês' in df.columns:
             df['Mês'] = df['Mês'].fillna('')
+            df['Mês Nome'] = ''
     return df
 
 # ===================== CABEÇALHO COM IMAGEM E TÍTULO =====================
@@ -115,60 +115,3 @@ st.dataframe(df, height=1000, use_container_width=True)
 # ===================== DOWNLOAD COMPLETO =====================
 csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
 st.sidebar.download_button("\U0001F4E5 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
-
-# ===================== ANÁLISE DE STATUS =====================
-if aba_selecionada == "ANÁLISE DE STATUS":
-    st.header("\U0001F4CA Análise Detalhada de Envio e Cumprimento")
-
-    df['Mês'] = pd.to_numeric(df['Mês'], errors='coerce')
-    df['Ano'] = pd.to_numeric(df['Ano'], errors='coerce')
-
-    municipios_unicos = df['MUNICÍPIO'].dropna().unique()
-    municipio_sel = st.sidebar.selectbox("Selecione um Município para análise:", municipios_unicos)
-
-    anos_unicos = df[df['MUNICÍPIO'] == municipio_sel]['Ano'].dropna().unique()
-    ano_sel = st.sidebar.selectbox("Selecione o Ano para análise:", anos_unicos)
-
-    df_municipio = df[(df['MUNICÍPIO'] == municipio_sel) & (df['Ano'] == ano_sel)]
-
-    total_envios = df_municipio.shape[0]
-    st.metric("Total de Envios no Ano", total_envios)
-
-    meses_enviados = df_municipio['Mês'].dropna().unique().tolist()
-    meses_todos = list(range(1, 13))
-    meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
-    st.metric("Meses Pendentes", len(meses_pendentes))
-    if meses_pendentes:
-        st.warning(f"Meses não enviados: {meses_pendentes}")
-        rain(emoji="🤖", font_size=30, falling_speed=5, animation_length="infinite")
-
-    duplicados = df_municipio[df_municipio.duplicated(subset=['Mês', 'Ano'], keep=False)]
-    if not duplicados.empty:
-        st.warning("⚠️ Foram encontrados registros duplicados para este município e ano.")
-        st.dataframe(duplicados)
-
-    df_municipio['Data Limite'] = pd.to_datetime(
-        df_municipio['Ano'].fillna(0).astype(int).astype(str) + '-' +
-        df_municipio['Mês'].fillna(1).astype(int).astype(str) + '-10',
-        errors='coerce'
-    )
-    df_municipio['Dentro do Prazo'] = df_municipio['Carimbo de data/hora'] <= df_municipio['Data Limite']
-
-    enviados_dentro = df_municipio['Dentro do Prazo'].sum()
-    enviados_fora = total_envios - enviados_dentro
-    st.metric("Envios Dentro do Prazo", enviados_dentro)
-    st.metric("Envios Fora do Prazo", enviados_fora)
-
-    graf = df_municipio.groupby(['Mês', 'Dentro do Prazo']).size().reset_index(name='Total Envios')
-    graf['Status'] = graf['Dentro do Prazo'].apply(lambda x: 'Dentro do Prazo' if x else 'Fora do Prazo')
-
-    chart = alt.Chart(graf).mark_bar().encode(
-        x=alt.X('Mês:O', title='Mês'),
-        y=alt.Y('Total Envios:Q', title='Total Envios'),
-        color=alt.Color('Status:N', scale=alt.Scale(domain=['Dentro do Prazo', 'Fora do Prazo'], range=['green', 'red'])),
-        tooltip=['Mês', 'Total Envios', 'Status']
-    ).properties(title=f"Envios por Mês - {municipio_sel}/{ano_sel}")
-    st.altair_chart(chart, use_container_width=True)
-
-    st.subheader("\U0001F4C4 Detalhamento dos Envios")
-    st.dataframe(df_municipio, use_container_width=True)
