@@ -85,7 +85,7 @@ csv_completo = df.to_csv(index=False, encoding='utf-8-sig')
 st.sidebar.download_button("\U0001F4E5 Baixar Todos os Dados CSV", data=csv_completo.encode('utf-8-sig'), file_name=f"{aba_selecionada.lower().replace(' ', '_')}.csv", mime='text/csv')
 
 # ===================== CHECAR MESES PENDENTES COM ROBOZINHO =====================
-if 'MUNICÍPIO' in df.columns and 'Mês' in df.columns and 'Ano' in df.columns:
+if 'MUNICÍPIO' in df.columns and 'Carimbo de data/hora' in df.columns:
     st.header("\U0001F916 Análise de Pendência por Unidade")
     municipios_unicos = df['MUNICÍPIO'].dropna().unique()
     municipio_sel = st.selectbox("Selecione um Município:", municipios_unicos)
@@ -94,14 +94,21 @@ if 'MUNICÍPIO' in df.columns and 'Mês' in df.columns and 'Ano' in df.columns:
     ano_sel = st.selectbox("Selecione o Ano:", anos_unicos)
 
     df_municipio = df[(df['MUNICÍPIO'] == municipio_sel) & (df['Ano'] == int(ano_sel))]
-    meses_enviados = df_municipio['Mês'].dropna().astype(int).unique().tolist()
 
+    meses_enviados = df_municipio['Mês'].dropna().astype(int).unique().tolist()
     meses_todos = list(range(1, 13))
     meses_pendentes = sorted(list(set(meses_todos) - set(meses_enviados)))
 
     if meses_pendentes:
-        st.error(f"🤖 Município **{municipio_sel}** - Ano **{ano_sel}**\n\nEnviou: **{len(meses_enviados)} meses**\n\n🔴 Meses pendentes: {meses_pendentes}")
+        nomes_pendentes = [pd.to_datetime(f'2020-{m}-01').strftime('%B') for m in meses_pendentes]
+        st.error(f"🤖 Município **{municipio_sel}** - Ano **{ano_sel}**\n\n🔴 Meses pendentes: {nomes_pendentes}")
         st.markdown("<div style='font-size:50px;'>🤖🚩</div>", unsafe_allow_html=True)
     else:
         st.success(f"🤖 Município **{municipio_sel}** - Ano **{ano_sel}**\n\n✅ Todos os meses enviados!")
         st.markdown("<div style='font-size:50px;'>🤖🎉</div>", unsafe_allow_html=True)
+
+    # Verificar duplicados
+    duplicados = df_municipio[df_municipio.duplicated(subset=['Mês'], keep=False)]
+    if not duplicados.empty:
+        st.warning("⚠️ Foram encontrados registros duplicados:")
+        st.dataframe(duplicados[['Carimbo de data/hora', 'MUNICÍPIO', 'Mês', 'Mês Nome']], use_container_width=True)
