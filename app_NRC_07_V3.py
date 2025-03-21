@@ -22,42 +22,30 @@ with col2:
 st.warning("🚨 **ATENÇÃO! UNIDADE INTERLIGADA!**\n\nAcesse e preencha/atualize seus dados do Provimento 07/2021.", icon="⚠️")
 st.markdown("[📝 **Clique aqui para acessar o Formulário Obrigatório**](https://forms.gle/vETZAjAStN3F9YHx9)")
 
-# ===================== RESUMO DO PROVIMENTO =====================
-with st.expander("ℹ️ Sobre o Provimento 07/2021 - Clique para detalhes"):
-    st.markdown("""
-**Resumo do Provimento CGJ:**
-
-A instalação de unidades interligadas em hospitais é obrigatória, independentemente do número de partos. Os registros de nascimento e óbito são feitos nessas unidades com livro próprio. Os serviços devem enviar relatório mensal até o dia 10 via [Formulário Online](https://forms.gle/vETZAjAStN3F9YHx9), sob pena de sanções administrativas.
-
-**Desembargador José Jorge Figueiredo dos Anjos**  
-Corregedor-Geral da Justiça (Biênio 2024-2026)
-""")
-
 # ===================== LINKS DAS ABAS =====================
 sheet_id = "1k_aWceBCN_V0VaRJa1Jw42t6hfrER4T4bE2fS88mLDI"
-base_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet="
 
-subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
-subregistro_base_url = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/gviz/tq?tqx=out:csv&sheet=subregistro"
-
+# IMPORTANTE: Usar export direto + gid certo para cada aba:
 sheet_urls = {
-    "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA": f"{base_url}Respostas%20ao%20formul%C3%A1rio%202",
-    "QUANTITATIVO (2024 E 2025)": f"{base_url}QUANTITATIVO%20(2024%20E%202025)",
-    "DADOS FILTRADOS DA CAIXA DE ENTRADA": f"{base_url}(N%C3%83O%20ALTERE%20OS%20FILTROS%20OU%20DADOS)",
-    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO": f"{base_url}P%C3%A1gina11",
-    "STATUS DE RECEBIMENTO": f"{base_url}STATUS%20DE%20RECEBIMENTO",
-    "GRAPH SITE": f"{base_url}GRAPH%20SITE",
-    "DADOS ORGANIZADOS": f"{base_url}DADOS%20ORGANIZADOS",
-    "SUB-REGISTRO": subregistro_base_url
+    "RESPOSTAS AO FORMULÁRIO CAIXA DE ENTRADA": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=0",
+    "QUANTITATIVO (2024 E 2025)": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1644302156",
+    "DADOS FILTRADOS DA CAIXA DE ENTRADA": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1519697321",
+    "DADOS DE RECEBIMENTO DO FORMULÁRIO POR MUNICÍPIO": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=812030272",
+    "STATUS DE RECEBIMENTO": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1842981742",
+    "GRAPH SITE": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=1341836627",
+    "DADOS ORGANIZADOS": f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid=667723113"
 }
+
+# Sub-registro separado
+subregistro_sheet_id = "1UD1B9_5_zwd_QD0drE1fo3AokpE6EDnYTCwywrGkD-Y"
+sheet_urls["SUB-REGISTRO"] = f"https://docs.google.com/spreadsheets/d/{subregistro_sheet_id}/export?format=csv&gid=0"
 
 # ===================== FUNÇÃO: Carregar Dados =====================
 @st.cache_data(ttl=3600)
 def carregar_planilha(aba):
-    # GARANTIA: leitura completa do CSV, sem cortar linhas
     df = pd.read_csv(sheet_urls[aba], low_memory=False, dtype=str)
-    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]  # remove colunas vazias
-    origem = "Planilha Pública Online (CSV)"
+    df = df.loc[:, ~df.columns.str.contains('^Unnamed')]
+    origem = "Exportação Completa Google Sheets"
     return df, origem
 
 # ===================== LOAD DATA =====================
@@ -69,7 +57,6 @@ df, origem = carregar_planilha(aba_selecionada)
 st.caption(f"Fonte dos dados: {origem}")
 
 # ===================== MOSTRAR TODAS AS LINHAS =====================
-# GARANTIR TODAS AS LINHAS EXIBIDAS:
 st.dataframe(df, height=1200, use_container_width=True)
 
 # ===================== DOWNLOAD COMPLETO DOS DADOS =====================
